@@ -1,0 +1,4 @@
+name: MinestarHotline
+main: de.minestar.minestarHotline.core.Core
+version: ${pom.version}
+depend: [MineStarLibrary]
