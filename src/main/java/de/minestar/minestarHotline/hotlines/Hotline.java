@@ -20,10 +20,49 @@ package de.minestar.minestarHotline.hotlines;
 
 public interface Hotline {
 
+    /**
+     * Sending a message to the hotline
+     * 
+     * @param callerName
+     *            The players name using the hotline
+     * @param message
+     *            The message of the player
+     */
     public void sendMessage(String callerName, String message);
 
+    /**
+     * Register a supporter to the hotline
+     * 
+     * @param supportName
+     *            The supportes name
+     * @param contactInformation
+     *            The contact information to the supporter on the hotline
+     */
     public void registerSupporter(String supportName, String contactInformation);
-    
-    public void unregisterSupporter(String suppportName, String contactInformation);
+
+    /**
+     * Remove a supporter from the hotline
+     * 
+     * @param supportName
+     *            The supportes name
+     * @param contactInformation
+     *            The contact information to the supporter on the hotline
+     */
+    public void deregisterSupporter(String suppportName, String contactInformation);
+
+    /**
+     * Check whether the supporter is registered to the hotline
+     * 
+     * @param supportName
+     *            The supporters name
+     * @return <code>True</code> when the supportes name was registered to the
+     *         hotline
+     */
+    public boolean isSupporterRegistered(String supportName);
+
+    /**
+     * Close the hotline and release all resources
+     */
+    public void closeHotline();
 
 }

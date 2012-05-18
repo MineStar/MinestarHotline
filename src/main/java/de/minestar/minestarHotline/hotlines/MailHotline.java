@@ -41,7 +41,9 @@ import de.minestar.minestarlibrary.utils.ConsoleUtils;
 
 public class MailHotline implements Hotline {
 
+    // THE SESSION FOR THE SMTP SERVER
     private Session session;
+    // THE MAIL ADDRESS OF THE SMTP SERVER
     private InternetAddress from;
 
     // THE SUPPORTER MAIL ACCOUNTS
@@ -52,38 +54,11 @@ public class MailHotline implements Hotline {
         this.loadMailAccounts(dataFolder);
     }
 
-    @Override
-    public void sendMessage(String callerName, String message) {
+    // ************************
+    // *** INIT MAILHOTLINE ***
+    // ************************
 
-        // SUBJECT OF THE MAIL
-        String subject = "MinestarHotline - '" + callerName + "' braucht Hilfe";
-        // PREPARE TEXT
-        StringBuilder sBuilder = new StringBuilder("Hallo Supporter,\n\n");
-        sBuilder.append("Spieler '" + callerName + "' hat die Hotline benutzt und hat folgende Anfrage:\n\"");
-        sBuilder.append(message);
-        sBuilder.append("\"\n\nMinestarHotline");
-
-        // SEND MAIL
-        this.sendMail(subject, sBuilder.toString());
-    }
-
-    @Override
-    public void registerSupporter(String supportName, String contactInformation) {
-        if (this.isValidAddress(contactInformation)) {
-            try {
-                mailAccounts.put(supportName, new InternetAddress(contactInformation));
-            } catch (Exception e) {
-                ConsoleUtils.printException(e, Core.NAME, "Can't create an InternetAddress for " + contactInformation + "!");
-            }
-        } else
-            ConsoleUtils.printError(Core.NAME, "The E-Mail Address '" + contactInformation + "' isn't valid!");
-    }
-
-    @Override
-    public void unregisterSupporter(String suppportName, String contactInformation) {
-        mailAccounts.remove(suppportName);
-    }
-
+    // REGEX TO CHECK WHETHER STRING IS A VALID MAIL ADDRESS
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
 
     public boolean isValidAddress(String mailAddress) {
@@ -111,6 +86,22 @@ public class MailHotline implements Hotline {
         }
     }
 
+    // PRIVATE CLASS TO HOLD PASSWORD AND USER
+    private class MailAuthenticator extends Authenticator {
+        private String user;
+        private String password;
+
+        public MailAuthenticator(String user, String password) {
+            this.user = user;
+            this.password = password;
+        }
+
+        public PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(user, password);
+        }
+    }
+
+    // LOAD MAIL ACCOUNTS FROM A FILE
     private void loadMailAccounts(File dataFolder) {
         File accountFile = new File(dataFolder, "/mail/accounts.txt");
         if (!accountFile.exists()) {
@@ -138,25 +129,61 @@ public class MailHotline implements Hotline {
                 this.registerSupporter(split[0], split[1]);
             }
 
-            ConsoleUtils.printInfo(Core.NAME, "Loaded " + mailAccounts.size() + " mail accounts");
+            ConsoleUtils.printInfo(Core.NAME, "Registered MailHotline! Loaded " + mailAccounts.size() + " mail accounts!");
         } catch (Exception e) {
             ConsoleUtils.printException(e, Core.NAME, "Can't load mail accounts from " + accountFile);
         }
 
     }
-    // PRIVATE CLASS TO HOLD PASSWORD AND USER
-    private class MailAuthenticator extends Authenticator {
-        private String user;
-        private String password;
 
-        public MailAuthenticator(String user, String password) {
-            this.user = user;
-            this.password = password;
-        }
+    @Override
+    public void closeHotline() {
+        // DO NOTHING
+    }
 
-        public PasswordAuthentication getPasswordAuthentication() {
-            return new PasswordAuthentication(user, password);
-        }
+    // *********************************
+    // *** REGISTER/UNREGISTER MAILS ***
+    // *********************************
+
+    @Override
+    public void registerSupporter(String supportName, String contactInformation) {
+        if (this.isValidAddress(contactInformation)) {
+            try {
+                mailAccounts.put(supportName, new InternetAddress(contactInformation));
+            } catch (Exception e) {
+                ConsoleUtils.printException(e, Core.NAME, "Can't create an InternetAddress for " + contactInformation + "!");
+            }
+        } else
+            ConsoleUtils.printError(Core.NAME, "The E-Mail Address '" + contactInformation + "' isn't valid!");
+    }
+
+    @Override
+    public void deregisterSupporter(String suppportName, String contactInformation) {
+        mailAccounts.remove(suppportName);
+    }
+
+    @Override
+    public boolean isSupporterRegistered(String supportName) {
+        return mailAccounts.containsKey(supportName);
+    }
+
+    // ********************
+    // *** SENDING MAIL ***
+    // ********************
+
+    @Override
+    public void sendMessage(String callerName, String message) {
+
+        // SUBJECT OF THE MAIL
+        String subject = "MinestarHotline - '" + callerName + "' braucht Hilfe";
+        // PREPARE TEXT
+        StringBuilder sBuilder = new StringBuilder("Hallo Supporter,\n\n");
+        sBuilder.append("Spieler '" + callerName + "' hat die Hotline benutzt und hat folgende Anfrage:\n\"");
+        sBuilder.append(message);
+        sBuilder.append("\"\n\nMinestarHotline");
+
+        // SEND MAIL
+        this.sendMail(subject, sBuilder.toString());
     }
 
     // SENDING THE MAIL
