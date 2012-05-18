@@ -18,14 +18,33 @@
 
 package de.minestar.minestarHotline.core;
 
+import de.minestar.minestarHotline.manager.HotlineManager;
 import de.minestar.minestarlibrary.AbstractCore;
 
 public class Core extends AbstractCore {
 
     public static final String NAME = "MinestarHotline";
 
+    private static HotlineManager hotlineManager;
+
     public Core() {
         super(NAME);
+    }
+
+    @Override
+    protected boolean createManager() {
+        hotlineManager = new HotlineManager(getDataFolder());
+        return true;
+    }
+
+    @Override
+    protected boolean commonDisable() {
+        hotlineManager.closeHotlines();
+        return true;
+    }
+
+    public static HotlineManager getManager() {
+        return hotlineManager;
     }
 
 }

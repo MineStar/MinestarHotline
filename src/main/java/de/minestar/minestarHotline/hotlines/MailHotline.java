@@ -187,6 +187,7 @@ public class MailHotline implements Hotline {
     }
 
     // SENDING THE MAIL
+    // TODO: This have to be handeled multithreaded!
     private boolean sendMail(String subject, String message) {
         MimeMessage msg = new MimeMessage(this.session);
         try {
