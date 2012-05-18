@@ -23,15 +23,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import de.minestar.minestarHotline.hotlines.Hotline;
 import de.minestar.minestarHotline.hotlines.MailHotline;
+import de.minestar.minestarlibrary.data.Entry;
 
-public class HotlineManager {
+public class HotlineManager implements Runnable {
 
     // THE REGISTERED HOTLINES
     private List<Hotline> hotlines = new ArrayList<Hotline>(8);
     private Map<Class<? extends Hotline>, Hotline> hotlineTypes = new HashMap<Class<? extends Hotline>, Hotline>();
+
+    private Queue<Entry<String, String>> bufferedMessages = new LinkedBlockingQueue<Entry<String, String>>();
 
     public HotlineManager(File dataFolder) {
         this.registerHotlines(dataFolder);
@@ -44,36 +49,53 @@ public class HotlineManager {
         hotlines.add(new MailHotline(dataFolder));
     }
 
+    // METHOD TO PUT THE REGISTERD HOTLINES TO A MAP
     private void dontKnowTheNameOfThisFunctionBecauseThisIsVerySimiliarToRegisterHotlines() {
         for (Hotline hotline : hotlines)
             hotlineTypes.put(hotline.getClass(), hotline);
-
     }
 
     // SOMEONE USES THE HOTLINE
     public void useHotline(String callerName, String message) {
-        for (Hotline hotline : hotlines)
-            hotline.sendMessage(callerName, message);
+        // BUFFER THE MESSAGES
+        bufferedMessages.add(new Entry<String, String>(callerName, message));
     }
 
     // CLOSE ALL HOTLINES
-    public void closeHotlines() {
+    public synchronized void closeHotlines() {
+        run();
         for (Hotline hotline : hotlines)
             hotline.closeHotline();
     }
 
     // CLOSE ONE SPECIFIC HOTLINE
-    public void closeHotline(Class<? extends Hotline> hotlineClass) {
+    public synchronized void closeHotline(Class<? extends Hotline> hotlineClass) {
+        run();
         hotlineTypes.get(hotlineClass).closeHotline();
+
     }
 
     // REGISTER ONE SUPPORTER TO A SPECIFIC HOTLINE
-    public void registerSupporter(String supporterName, String contactInformation, Class<? extends Hotline> hotlineClass) {
+    public synchronized void registerSupporter(String supporterName, String contactInformation, Class<? extends Hotline> hotlineClass) {
         hotlineTypes.get(hotlineClass).registerSupporter(supporterName, contactInformation);
     }
 
     // DEREGISTER ONE SUPPORTER TO A SPECIFIC HOTLINE
-    public void deregisterSupporter(String supporterName, String contactInformation, Class<? extends Hotline> hotlineClass) {
+    public synchronized void deregisterSupporter(String supporterName, String contactInformation, Class<? extends Hotline> hotlineClass) {
         hotlineTypes.get(hotlineClass).deregisterSupporter(supporterName, contactInformation);
+    }
+
+    @Override
+    public void run() {
+        if (bufferedMessages.isEmpty())
+            return;
+
+        // HANDLE ALL BUFFERED MESSAGES
+        for (Entry<String, String> entry : bufferedMessages) {
+            for (Hotline hotline : hotlines) {
+                hotline.sendMessage(entry.getKey(), entry.getValue());
+            }
+        }
+        bufferedMessages.clear();
     }
 }

@@ -18,6 +18,10 @@
 
 package de.minestar.minestarHotline.core;
 
+import java.io.File;
+
+import org.bukkit.scheduler.BukkitScheduler;
+
 import de.minestar.minestarHotline.manager.HotlineManager;
 import de.minestar.minestarlibrary.AbstractCore;
 
@@ -32,8 +36,20 @@ public class Core extends AbstractCore {
     }
 
     @Override
+    protected boolean loadingConfigs(File dataFolder) {
+        return Settings.init(dataFolder);
+    }
+
+    @Override
     protected boolean createManager() {
         hotlineManager = new HotlineManager(getDataFolder());
+        return true;
+    }
+
+    @Override
+    protected boolean startThreads(BukkitScheduler scheduler) {
+        scheduler.scheduleAsyncRepeatingTask(this, hotlineManager, 20L * 15L, 20L * Settings.QUEUE_INTERVALL);
+
         return true;
     }
 
