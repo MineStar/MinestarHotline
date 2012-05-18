@@ -22,8 +22,10 @@ import java.io.File;
 
 import org.bukkit.scheduler.BukkitScheduler;
 
+import de.minestar.minestarHotline.commands.CallCommand;
 import de.minestar.minestarHotline.manager.HotlineManager;
 import de.minestar.minestarlibrary.AbstractCore;
+import de.minestar.minestarlibrary.commands.CommandList;
 
 public class Core extends AbstractCore {
 
@@ -49,6 +51,20 @@ public class Core extends AbstractCore {
     @Override
     protected boolean startThreads(BukkitScheduler scheduler) {
         scheduler.scheduleAsyncRepeatingTask(this, hotlineManager, 20L * 15L, 20L * Settings.QUEUE_INTERVALL);
+
+        return true;
+    }
+
+    @Override
+    protected boolean createCommands() {
+        //@formatter:off
+        this.cmdList = new CommandList(NAME, 
+                
+                new CallCommand("/call",    "<Message>",    "minestarhotline.call")
+                
+        );
+        
+        //@formatter:on
 
         return true;
     }

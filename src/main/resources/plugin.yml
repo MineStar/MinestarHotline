@@ -2,3 +2,7 @@ name: MinestarHotline
 main: de.minestar.minestarHotline.core.Core
 version: ${pom.version}
 depend: [MineStarLibrary]
+commands:
+  call:
+    description: Call the hotline
+    usage: /call <Message>
